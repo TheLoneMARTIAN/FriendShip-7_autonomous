@@ -20,6 +20,7 @@ public class AI_Autonomous_Drive extends LinearOpMode {
     private DcMotor rightRear = null;
     private DcMotor landingGear = null;
     private double Speed = 0.5;
+    private double extensionPower = 0.6;
 
     @Override
     public void runOpMode()  throws  InterruptedException{
@@ -32,7 +33,7 @@ public class AI_Autonomous_Drive extends LinearOpMode {
         rightFront = hardwareMap.get(DcMotor.class, "right_front");
         leftRear = hardwareMap.get(DcMotor.class, "left_rear");
         rightRear = hardwareMap.get(DcMotor.class, "right_rear");
-        landingGear = hardwareMap.get(DcMotor.class, "lander");
+        landingGear = hardwareMap.get(DcMotor.class, "landingGear");
 
 
         // Most robots need the motor on one side to be reversed to drive forward
@@ -46,42 +47,53 @@ public class AI_Autonomous_Drive extends LinearOpMode {
         runtime.reset();
 
 
+
         int landerPosition = -1;
         // run until the end of the match (driver presses STOP)
         //drive forward
-        Foward(1);
-        Thread.sleep(4000);
-        Strafeleft(1);
+        landingGear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        landingGear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        landingGear.setTargetPosition(900);
+        landingGear.setPower(extensionPower);
+        Thread.sleep(10000);
+        telemetry.addData("Lander", "Position (%d)", landingGear.getCurrentPosition());
+        telemetry.update();
+        Backward(Speed);
         Thread.sleep(500);
-        Straferight(1);
-        Thread.sleep(500);
-        Backward(1);
-        Thread.sleep(4000);
+        Straferight(Speed);
+        Thread.sleep(1000);
     }
 
-    public void Foward (double power){
-        leftFront.setPower(power);
-        leftRear.setPower(power);
-        rightFront.setPower(power);
-        rightRear.setPower(power);
+    private void moveRobot(double left_stick_x, double  left_stick_y, double right_stick_x){
+        double r = Math.hypot(left_stick_x, left_stick_y);
+        double robotAngle = Math.atan2(left_stick_y, left_stick_x) - Math.PI / 4;
+        double rightX = right_stick_x;
+        double leftFrontPower = r * Math.cos(robotAngle) + rightX;
+        double rightFrontPower = r * Math.sin(robotAngle) - rightX;
+        double leftBackPower = r * Math.sin(robotAngle) + rightX;
+        double rightBackPower = r * Math.cos(robotAngle) - rightX;
+
+        leftFront.setPower(leftFrontPower);
+        rightFront.setPower(rightFrontPower);
+        leftRear.setPower(leftBackPower);
+        rightRear.setPower(rightBackPower);
     }
-    public void Strafeleft(double power){
-        leftFront.setPower(-power);
-        leftRear.setPower(power);
-        rightFront.setPower(power);
-        rightRear.setPower(-power);
+
+    public void Foward (double speed){
+        moveRobot(0, -0.5, 0);
     }
-    public void Straferight(double power){
-        leftFront.setPower(power);
-        leftRear.setPower(-power);
-        rightFront.setPower(-power);
-        rightRear.setPower(power);
+    public void Strafeleft (double power){
+        moveRobot(0.5, 0, 0);
     }
-    public void Backward (double power){
-        leftFront.setPower(-power);
-        leftRear.setPower(-power);
-        rightFront.setPower(-power);
-        rightRear.setPower(-power);
+    private void Straferight (double power){
+        moveRobot(-0.5, 0,0);
+    }
+    private void Backward (double power){
+       moveRobot(0, 0.5, 0);
+    }
+    private void Land (double power){
+        int landerPosition = landingGear.getCurrentPosition();
+        int distance = 290;
     }
 
 }

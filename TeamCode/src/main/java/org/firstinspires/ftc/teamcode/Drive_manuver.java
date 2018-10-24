@@ -19,7 +19,7 @@ public class Drive_manuver extends LinearOpMode {
     private DcMotor rightRear = null;
     private DcMotor landingGear = null;
     private double Speed = 0.5;
-    private double extensionPower = 1;
+    private double extensionPower = 0.5;
 
     @Override
     public void runOpMode() {
@@ -32,7 +32,7 @@ public class Drive_manuver extends LinearOpMode {
         rightFront = hardwareMap.get(DcMotor.class, "right_front");
         leftRear = hardwareMap.get(DcMotor.class, "left_rear");
         rightRear = hardwareMap.get(DcMotor.class, "right_rear");
-        landingGear = hardwareMap.get(DcMotor.class, "lander");
+        landingGear = hardwareMap.get(DcMotor.class, "landingGear");
 
 
         // Most robots need the motor on one side to be reversed to drive forward
@@ -44,27 +44,39 @@ public class Drive_manuver extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
-
-        landingGear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        landingGear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         int landerPosition = -1;
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
+
             // Setup a variable for each drive wheel to save power level for telemetry
 
             if (gamepad2.dpad_up){
+                landingGear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 landingGear.setDirection(DcMotorSimple.Direction.FORWARD);
                 landingGear.setPower(extensionPower);
             }
             else if(gamepad2.dpad_down){
+                landingGear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 landingGear.setDirection(DcMotorSimple.Direction.REVERSE);
                 landingGear.setPower(extensionPower);
-            }else {
+            }
+            else if(gamepad2.dpad_left){
+                landingGear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                landingGear.setTargetPosition(20);
+                landingGear.setPower(extensionPower);
+
+            }
+            else if(gamepad2.dpad_right){
+                landingGear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                landingGear.setTargetPosition(-20);
+                landingGear.setPower(extensionPower);
+            }
+            else{
                 landingGear.setPower(0);
             }
-
-            landerPosition = landingGear.getCurrentPosition();
 
             double r = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
             double robotAngle = Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x) - Math.PI / 4;
@@ -83,7 +95,7 @@ public class Drive_manuver extends LinearOpMode {
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Motors", "left front (%.2f), right front(%.2f), left back (%.2f), right back(%.2f)", leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
             telemetry.addData("Speed", "Rotor speed (%.2f)", Speed);
-            telemetry.addData("Lander", "Position (%d)", landerPosition);
+            telemetry.addData("Lander", "Position (%d)", landingGear.getCurrentPosition());
             telemetry.update();
         }
     }
