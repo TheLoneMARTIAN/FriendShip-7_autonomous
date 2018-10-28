@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
@@ -20,7 +21,10 @@ public class Drive_manuver extends LinearOpMode {
     private DcMotor landingGear = null;
     private double Speed = 0.5;
     private double extensionPower = 0.5;
-
+    private  DcMotor lifter;
+    private DcMotor extender;
+    private DcMotor harvester;
+    private Servo harvester_lift;
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
@@ -33,8 +37,10 @@ public class Drive_manuver extends LinearOpMode {
         leftRear = hardwareMap.get(DcMotor.class, "left_rear");
         rightRear = hardwareMap.get(DcMotor.class, "right_rear");
         landingGear = hardwareMap.get(DcMotor.class, "landingGear");
-
-
+        lifter = hardwareMap.get(DcMotor.class, "lifter");
+        harvester = hardwareMap.get(DcMotor.class, "harvester");
+        harvester_lift = hardwareMap.get(Servo.class, "harvester_lift");
+        extender = hardwareMap.get(DcMotor.class, "extender");
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftFront.setDirection(DcMotor.Direction.FORWARD);
@@ -46,38 +52,73 @@ public class Drive_manuver extends LinearOpMode {
         runtime.reset();
         landingGear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        int landerPosition = -1;
+        double harvesterLiftPosition = harvester_lift.getPosition();
+        harvester_lift.scaleRange(0.2,0.8);
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
 
             // Setup a variable for each drive wheel to save power level for telemetry
 
-            if (gamepad2.dpad_up){
+            if (gamepad1.dpad_up){
                 landingGear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                landingGear.setDirection(DcMotorSimple.Direction.FORWARD);
+                landingGear.setDirection(DcMotor.Direction.FORWARD);
                 landingGear.setPower(extensionPower);
             }
-            else if(gamepad2.dpad_down){
+            else if(gamepad1.dpad_down){
                 landingGear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 landingGear.setDirection(DcMotorSimple.Direction.REVERSE);
                 landingGear.setPower(extensionPower);
-            }
-            else if(gamepad2.dpad_left){
-                landingGear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                landingGear.setTargetPosition(20);
-                landingGear.setPower(extensionPower);
-
-            }
-            else if(gamepad2.dpad_right){
-                landingGear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                landingGear.setTargetPosition(-20);
-                landingGear.setPower(extensionPower);
-            }
-            else{
+            }else{
                 landingGear.setPower(0);
             }
+            if (gamepad2.left_stick_y == 1){
+               extender.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+               extender.setDirection(DcMotor.Direction.FORWARD);
+               extender.setPower(0.1);
+            }else if(gamepad2.left_stick_y == -1){
+                extender.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                extender.setDirection(DcMotor.Direction.REVERSE);
+                extender.setPower(0.1);
+            }else {
+                extender.setPower(0);
+            }
+            if (gamepad2.right_stick_y == 1){
+                lifter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                lifter.setDirection(DcMotor.Direction.FORWARD);
+                lifter.setPower(1.0);
+            }else  if (gamepad2.right_stick_y == -1){
+                lifter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                lifter.setDirection(DcMotor.Direction.REVERSE);
+                lifter.setPower(0.3);
+            }else {
+                lifter.setPower(0);
+            }
 
+
+            if (gamepad2.dpad_right){
+                harvesterLiftPosition = harvesterLiftPosition < 1.0 ? harvesterLiftPosition + 0.01: 1.0;
+                harvester_lift.setPosition(harvesterLiftPosition);
+                harvester_lift.setDirection(Servo.Direction.REVERSE);
+            }else  if (gamepad2.dpad_left){
+                harvesterLiftPosition = harvesterLiftPosition > 0 ? harvesterLiftPosition - 0.01: 0;
+                harvester_lift.setPosition(harvesterLiftPosition);
+                harvester_lift.setDirection(Servo.Direction.FORWARD);
+            }else {
+                harvester_lift.setPosition(0.0);
+                harvester_lift.setDirection(Servo.Direction.FORWARD);
+            }
+            if (gamepad2.left_bumper){
+                harvester.setDirection(DcMotor.Direction.REVERSE);
+                harvester.setPower(0.5);
+            }else  if (gamepad2.right_bumper){
+                harvester.setDirection(DcMotor.Direction.FORWARD);
+                harvester.setPower(0.5);
+
+            }else {
+                harvester.setPower(0);
+
+            }
             double r = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
             double robotAngle = Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x) - Math.PI / 4;
             double rightX = gamepad1.right_stick_x;
@@ -96,6 +137,8 @@ public class Drive_manuver extends LinearOpMode {
             telemetry.addData("Motors", "left front (%.2f), right front(%.2f), left back (%.2f), right back(%.2f)", leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
             telemetry.addData("Speed", "Rotor speed (%.2f)", Speed);
             telemetry.addData("Lander", "Position (%d)", landingGear.getCurrentPosition());
+            telemetry.addData("ArmLift", "Position(%d)", lifter.getCurrentPosition());
+            telemetry.addData("HarvesterLift", "Position(%.2f)", harvester_lift.getPosition());
             telemetry.update();
         }
     }
