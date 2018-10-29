@@ -53,15 +53,15 @@ public class AI_Autonomous_Drive extends LinearOpMode {
         //drive forward
         landingGear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         landingGear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        landingGear.setTargetPosition(900);
+        landingGear.setTargetPosition(800);
         landingGear.setPower(extensionPower);
         Thread.sleep(10000);
         telemetry.addData("Lander", "Position (%d)", landingGear.getCurrentPosition());
         telemetry.update();
         Backward(Speed);
         Thread.sleep(500);
-        Straferight(Speed);
-        Thread.sleep(1000);
+        Straferight(Speed * 2);
+        Thread.sleep(3000);
     }
 
     private void moveRobot(double left_stick_x, double  left_stick_y, double right_stick_x){

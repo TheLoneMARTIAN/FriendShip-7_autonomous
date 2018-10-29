@@ -25,6 +25,10 @@ public class Drive_manuver extends LinearOpMode {
     private DcMotor extender;
     private DcMotor harvester;
     private Servo harvester_lift;
+
+    private double harvesterStartPos = 0;
+    private double harvesterTargetPos = 0;
+
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
@@ -53,7 +57,9 @@ public class Drive_manuver extends LinearOpMode {
         landingGear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         double harvesterLiftPosition = harvester_lift.getPosition();
-        harvester_lift.scaleRange(0.2,0.8);
+        harvester_lift.scaleRange(0.1,0.8);
+        harvester_lift.setDirection(Servo.Direction.REVERSE);
+        harvester_lift.setPosition(0.5);
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
@@ -75,50 +81,63 @@ public class Drive_manuver extends LinearOpMode {
             if (gamepad2.left_stick_y == 1){
                extender.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                extender.setDirection(DcMotor.Direction.FORWARD);
-               extender.setPower(0.1);
+               extender.setPower(0.2);
             }else if(gamepad2.left_stick_y == -1){
                 extender.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 extender.setDirection(DcMotor.Direction.REVERSE);
-                extender.setPower(0.1);
+                extender.setPower(0.2);
             }else {
                 extender.setPower(0);
             }
             if (gamepad2.right_stick_y == 1){
                 lifter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 lifter.setDirection(DcMotor.Direction.FORWARD);
-                lifter.setPower(1.0);
+                lifter.setPower(0.5);
             }else  if (gamepad2.right_stick_y == -1){
                 lifter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 lifter.setDirection(DcMotor.Direction.REVERSE);
-                lifter.setPower(0.3);
+                lifter.setPower(0.8);
             }else {
-                lifter.setPower(0);
+                /*lifter.setPower(0.2);
+                lifter.setDirection(DcMotor.Direction.REVERSE);*/
             }
 
 
             if (gamepad2.dpad_right){
-                harvesterLiftPosition = harvesterLiftPosition < 1.0 ? harvesterLiftPosition + 0.01: 1.0;
-                harvester_lift.setPosition(harvesterLiftPosition);
-                harvester_lift.setDirection(Servo.Direction.REVERSE);
+                /*harvesterLiftPosition = harvesterStartPos + ;
+                if (harvesterLiftPosition > 0.7) {
+                    harvesterLiftPosition = 0.7;
+                }*/
+                //harvesterTargetPos = 0.8;
+
+                //harvester_lift.setPosition(1.0);
+                //harvester_lift.setDirection(Servo.Direction.REVERSE);
             }else  if (gamepad2.dpad_left){
-                harvesterLiftPosition = harvesterLiftPosition > 0 ? harvesterLiftPosition - 0.01: 0;
-                harvester_lift.setPosition(harvesterLiftPosition);
-                harvester_lift.setDirection(Servo.Direction.FORWARD);
-            }else {
-                harvester_lift.setPosition(0.0);
-                harvester_lift.setDirection(Servo.Direction.FORWARD);
+                /*harvesterLiftPosition = harvesterStartPos - 0.1;
+                if (harvesterLiftPosition < 0) {
+                    harvesterLiftPosition = 0.0;
+                }*/
+                //harvester_lift.setPosition(0);
+                //harvester_lift.setDirection(Servo.Direction.FORWARD);
+            } else {
+                //harvester_lift.setDirection(harvester_lift.getDirection());
+                //harvester_lift.setPosition(harvester_lift.getPosition());
             }
+
             if (gamepad2.left_bumper){
                 harvester.setDirection(DcMotor.Direction.REVERSE);
                 harvester.setPower(0.5);
             }else  if (gamepad2.right_bumper){
                 harvester.setDirection(DcMotor.Direction.FORWARD);
-                harvester.setPower(0.5);
+                harvester.setPower(0.1);
 
             }else {
                 harvester.setPower(0);
-
             }
+
+
+            //DriveMechumWheel.moveRobot(-gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x,
+            //        leftFront, leftRear, rightFront, rightRear);
             double r = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
             double robotAngle = Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x) - Math.PI / 4;
             double rightX = gamepad1.right_stick_x;
